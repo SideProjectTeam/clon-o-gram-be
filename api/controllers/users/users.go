@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/SideProjectTeam/clon-o-gram-be/api/mngdb"
 	"github.com/SideProjectTeam/clon-o-gram-be/api/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,8 +24,8 @@ type CreateUserBody struct {
 	Email    string `validate:"required,email"`
 }
 
-
-func RegisterUser(c *gin.Context) {
+//Register
+func Register(c *gin.Context) {
 
 	var body CreateUserBody
 	//c.BindJSON(&body)
@@ -65,4 +66,30 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"username": body.Username})
+}
+
+//Login controller
+func Login(c *gin.Context){
+	type LoginCommand struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	var body LoginCommand
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var user models.User
+
+	if err := mngdb.Clonodb.Collection("Users").FindOne(mngdb.Ctx, bson.D{{"username", body.Username}}).Decode(&user); err!=nil{
+		c.JSON(http.StatusBadRequest,gin.H{"error":err.Error()})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password),[]byte(body.Password)); err!=nil{
+		c.JSON(http.StatusBadRequest,gin.H{"error":"username or password is incorrect"})
+		return
+	}
+
+	c.JSON(http.StatusOK,gin.H{"token":"Login success: Need to return token here or in header"})
 }

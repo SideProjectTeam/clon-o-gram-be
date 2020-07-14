@@ -13,6 +13,6 @@ type User struct {
     CreatedAt time.Time          `bson:"created_at"`
     UpdatedAt time.Time          `bson:"updated_at"`
 	Username  string             `bson:"username"`
-	Password string                `bson:"password"`
+	Password string              `bson:"password"`
 	Email string				 `bson:"email"`
 }

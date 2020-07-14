@@ -6,8 +6,9 @@ import (
 	"github.com/SideProjectTeam/clon-o-gram-be/api/controllers/users"
 )
 
+//SetRoutes is where you add all controllers to gin router
 func SetRoutes(r *gin.Engine) *gin.Engine {
-	r.POST("/register",users.RegisterUser)
-	
+	r.POST("/register",users.Register)
+	r.POST("/login",users.Login)
 	return r
 }
