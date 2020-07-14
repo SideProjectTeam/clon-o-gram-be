@@ -1,12 +1,12 @@
-package controllers
+package users
 
 import (
+	"github.com/gin-gonic/gin"
 	"fmt"
-	"encoding/json"
 	"net/http"
 	"time"
-	
-	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/go-playground/validator/v10"
 	"github.com/SideProjectTeam/clon-o-gram-be/api/mngdb"
 	"github.com/SideProjectTeam/clon-o-gram-be/api/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -24,24 +24,18 @@ type CreateUserBody struct {
 }
 
 
-//GetUsers Dumb method
-func GetUsers(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("List of users"))
-}
-
-//RegisterUser is controller function for register a user
-func RegisterUser(w http.ResponseWriter, r *http.Request) {
+func RegisterUser(c *gin.Context) {
 
 	var body CreateUserBody
+	//c.BindJSON(&body)
 
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if err := validator.New().Struct(body); err != nil {
-		http.Error(w, err.Error(), 400)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -62,7 +56,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	//Create
 	_,err = mngdb.Clonodb.Collection("Users").InsertOne(mngdb.Ctx, user)
 	if err!=nil{
-		http.Error(w,err.Error(),400)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -70,5 +64,5 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	fmt.Fprintf(w,"User Created %s",body.Username)
+	c.JSON(http.StatusOK, gin.H{"username": body.Username})
 }
