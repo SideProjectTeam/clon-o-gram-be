@@ -10,5 +10,6 @@ import (
 func SetRoutes(r *gin.Engine) *gin.Engine {
 	r.POST("/register",users.Register)
 	r.POST("/login",users.Login)
+	r.POST("/update_user",users.Update)
 	return r
 }

@@ -18,17 +18,14 @@ import (
 //TODO add better validations
 
 
-type CreateUserBody struct {
-	Username string `validate:"required,min=3,max=15"`
-	Password string `validate:"required,min=8"`
-	Email    string `validate:"required,email"`
-}
-
-//Register
+//Register for user
 func Register(c *gin.Context) {
 
-	var body CreateUserBody
-	//c.BindJSON(&body)
+	var body struct {
+		Username string `validate:"required,min=3,max=15"`
+		Password string `validate:"required,min=8"`
+		Email    string `validate:"required,email"`
+	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -71,14 +68,20 @@ func Register(c *gin.Context) {
 //Login controller
 func Login(c *gin.Context){
 	type LoginCommand struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username string `json:"username" validate:"required,min=3,max=15"`
+		Password string `json:"password" validate:"required,min=8"`
 	}
 	var body LoginCommand
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if err := validator.New().Struct(body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	var user models.User
 
 	if err := mngdb.Clonodb.Collection("Users").FindOne(mngdb.Ctx, bson.D{{"username", body.Username}}).Decode(&user); err!=nil{
@@ -92,4 +95,35 @@ func Login(c *gin.Context){
 	}
 
 	c.JSON(http.StatusOK,gin.H{"token":"Login success: Need to return token here or in header"})
+}
+
+//Update is for PUT method 
+func Update(c * gin.Context){
+
+	//comment here for test 
+	c.JSON(http.StatusNotImplemented, gin.H{"error": "Not implemented yet"})
+	return
+
+	var body struct {
+		Fullname *string 			`json:"fullname"`
+		Password *string 			`json:"password" validate:"min=3,max=15"`
+		ID primitive.ObjectID       `json:"_id" validate:"required"`
+		ProfilePicURL *string       `json:"profile_pic_url"`
+		PrivacyLevel *bool          `json:"privacy_level"`
+	}
+	
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	fmt.Println(body)
+	
+	//validate 
+	if err := validator.New().Struct(body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//Wait for token session
+	//TODO add update on db
 }
